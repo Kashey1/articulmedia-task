@@ -8,8 +8,8 @@
 <?if (count($arResult['USERS']) > 0) {?>
 
     <div class="users-functional-buttons">
-        <a id="users-export-csv" href="#"><?=Loc::getMessage('EXPORT_CSV')?></a>
-        <a id="users-export-xml" href="#"><?=Loc::getMessage('EXPORT_XML')?></a>
+        <a id="users-export-csv" class="export-button" data-type="csv" href="#"><?=Loc::getMessage('EXPORT_CSV')?></a>
+        <a id="users-export-xml" class="export-button" data-type="xml" href="#"><?=Loc::getMessage('EXPORT_XML')?></a>
     </div>
 
     <div class="users-block-wr">
