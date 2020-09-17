@@ -152,15 +152,27 @@ class UsersList extends CBitrixComponent implements Controllerable
 
     public function executeComponent() {
 
-        $cache_id = md5(serialize($this->arParams));
+        $pageRequest = Context::getCurrent()->getRequest()->getQuery("PAGE");
+
+        if (!$pageRequest)
+            $pageRequest = "page-1";
+
+
+        $cache_id = md5(serialize($this->arParams)."_".$pageRequest);
         $cache_dir = "/tagged_userslist";
         $obCache = new CPHPCache;
 
         if($obCache->InitCache(intval($this->arParams["CACHE_TIME"]), $cache_id, $cache_dir)) {
-            $this->arResult['USERS'] = $obCache->GetVars();
+            $this->arResult = $obCache->GetVars();
         } elseif ($obCache->StartDataCache()) {
+
             $nav = new \Bitrix\Main\UI\PageNavigation("PAGE");
             $nav->allowAllRecords(true)->setPageSize(intval($this->arParams["USER_COUNT"]))->initFromUri();
+
+            global $CACHE_MANAGER;
+            $CACHE_MANAGER->StartTagCache($cache_dir);
+            $CACHE_MANAGER->RegisterTag("users_list");
+
 
 
             $users = \Bitrix\Main\UserTable::getList(
@@ -173,21 +185,16 @@ class UsersList extends CBitrixComponent implements Controllerable
                 )
             );
 
-            global $CACHE_MANAGER;
-            $CACHE_MANAGER->StartTagCache($cache_dir);
-
             while ($arRes = $users->fetch()) {
-                $CACHE_MANAGER->RegisterTag("iblock_id_".$arRes["ID"]);
-               $this->arResult['USERS'][] = $arRes;
+                $CACHE_MANAGER->RegisterTag("user_id_".$arRes["ID"]);
+                $this->arResult['USERS'][] = $arRes;
             }
 
             $nav->setRecordCount($users->getCount());
             $this->arResult['PAGER'] = $nav;
 
-            $CACHE_MANAGER->RegisterTag("iblock_id_new");
             $CACHE_MANAGER->EndTagCache();
-
-            $obCache->EndDataCache($arElements);
+            $obCache->EndDataCache($this->arResult);
         }
 
         $this->initEvents();
